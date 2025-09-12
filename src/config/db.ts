@@ -1,36 +1,42 @@
 import mongoose from "mongoose";
+import { delay } from "../helpers/helpers";
 
-interface DBOption {
+interface DBConnectionOptions {
   maxRetries?: number;
   retryDelay?: number;
   mongoURI?: string;
   attempt?: number;
 }
 
-// Fonction connectDB avec retry
+enum DbConfig {
+  MAX_RETRIES = 3,
+  RETRY_DELAY = 1000,
+  ATTEMPT = 1,
+}
+
 const connectDB = async ({
-  maxRetries = 3,
-  retryDelay = 5000,
+  maxRetries = DbConfig.MAX_RETRIES,
+  retryDelay = DbConfig.RETRY_DELAY,
   mongoURI = "",
-  attempt = 1,
-}: DBOption): Promise<void> => {
+  attempt = DbConfig.ATTEMPT,
+}: DBConnectionOptions): Promise<void> => {
   try {
     const conn = await mongoose.connect(mongoURI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`MongoDB connection failed on attempt ${attempt}:`, error);
+    console.error(`❌ MongoDB connection failed on attempt ${attempt}:`, error);
 
     if (attempt < maxRetries) {
-      console.log(
-        `Retrying connection... Attempt ${attempt + 1} of ${maxRetries}`
-      );
-      setTimeout(
-        () =>
-          connectDB({ maxRetries, retryDelay, mongoURI, attempt: attempt + 1 }),
-        retryDelay
-      );
+      await delay(retryDelay);
+
+      return connectDB({
+        maxRetries,
+        retryDelay,
+        mongoURI,
+        attempt: attempt + 1,
+      });
     } else {
-      console.error("Could not connect to MongoDB after multiple attempts.");
+      console.error("🚨 Could not connect to MongoDB after multiple attempts.");
     }
   }
 };
