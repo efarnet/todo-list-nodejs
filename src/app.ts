@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./config/db";
+import todoRoutes from "./routes/todo.route";
 
 dotenv.config();
 
@@ -13,10 +14,7 @@ connectDB({ mongoURI: process.env.MONGO_URI || "" });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api", (req, res, next) => {
-  console.log("API middleware");
-  next();
-});
+app.use("/api/todos", todoRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
