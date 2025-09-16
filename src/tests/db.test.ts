@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import connectDB from "../config/db";
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ path: ".env.test" });
 
 jest.mock("mongoose");
 const mockedMongoose = mongoose as jest.Mocked<typeof mongoose>;

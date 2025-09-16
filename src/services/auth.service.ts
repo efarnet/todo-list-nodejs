@@ -56,6 +56,3 @@ export const authenticate = async (
   return { user, token };
 };
 
-export const verifyToken = (token: string): AuthPayload => {
-  return jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload;
-};
