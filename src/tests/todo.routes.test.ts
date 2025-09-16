@@ -3,15 +3,34 @@ import express from "express";
 import todoRoutes from "../routes/todo.route";
 import * as todoService from "../services/todo.service";
 import { ITodo } from "../models/todo.model";
-import { is } from "zod/v4/locales";
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
+
+dotenv.config({ path: ".env.test" });
 
 // Mock the service
-jest.mock("../services/todo.service");
+jest.mock("../services/todo.service", () => ({
+  findAll: jest.fn(),
+  findTodoById: jest.fn(),
+  createTodo: jest.fn(),
+  updateTodo: jest.fn(),
+  deleteTodo: jest.fn(),
+}));
+
 const mockedTodoService = todoService as jest.Mocked<typeof todoService>;
 
 const app = express();
+
 app.use(express.json());
 app.use("/api/todos", todoRoutes);
+
+const secret = process.env.JWT_SECRET || "";
+
+const testUserId = "test-user-id";
+const testToken = jwt.sign(
+  { sub: testUserId, email: "test@example.com" },
+  secret
+);
 
 describe("Todo Routes", () => {
   beforeEach(() => {
@@ -26,7 +45,9 @@ describe("Todo Routes", () => {
 
     mockedTodoService.findAll.mockResolvedValue(mockTodos as any);
 
-    const res = await request(app).get("/api/todos");
+    const res = await request(app)
+      .get("/api/todos")
+      .set("Authorization", `Bearer ${testToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual(mockTodos);
@@ -37,7 +58,9 @@ describe("Todo Routes", () => {
     const mockTodo = { _id: "1", title: "Test Todo", isCompleted: false };
     mockedTodoService.findTodoById.mockResolvedValue(mockTodo as ITodo);
 
-    const res = await request(app).get("/api/todos/1");
+    const res = await request(app)
+      .get("/api/todos/1")
+      .set("Authorization", `Bearer ${testToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual(mockTodo);
@@ -47,7 +70,9 @@ describe("Todo Routes", () => {
   test("GET /api/todos/:id should return 404 if todo not found", async () => {
     mockedTodoService.findTodoById.mockResolvedValue(null);
 
-    const res = await request(app).get("/api/todos/999");
+    const res = await request(app)
+      .get("/api/todos/999")
+      .set("Authorization", `Bearer ${testToken}`);
 
     expect(res.status).toBe(404);
     expect(res.body).toHaveProperty("error");
@@ -62,7 +87,8 @@ describe("Todo Routes", () => {
 
     const res = await request(app)
       .post("/api/todos")
-      .send(newTodo);
+      .send(newTodo)
+      .set("Authorization", `Bearer ${testToken}`);
 
     expect(res.status).toBe(201);
     expect(res.body).toEqual(createdTodo);
@@ -72,7 +98,8 @@ describe("Todo Routes", () => {
   test("POST /api/todos should return 400 if title is missing", async () => {
     const res = await request(app)
       .post("/api/todos")
-      .send({ isCompleted: false });
+      .send({ isCompleted: false })
+      .set("Authorization", `Bearer ${testToken}`);
 
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty("errors");
@@ -81,7 +108,8 @@ describe("Todo Routes", () => {
   test("POST /api/todos should return 400 if nothing sent in body", async () => {
     const res = await request(app)
       .post("/api/todos")
-      .send({});
+      .send({})
+      .set("Authorization", `Bearer ${testToken}`);
 
     expect(res.status).toBe(400);
     expect(res.body).toHaveProperty("errors");
@@ -96,7 +124,8 @@ describe("Todo Routes", () => {
 
     const res = await request(app)
       .patch(`/api/todos/${todo._id}`)
-      .send({ isCompleted: updatedTodo.isCompleted });
+      .send({ isCompleted: updatedTodo.isCompleted })
+      .set("Authorization", `Bearer ${testToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual(updatedTodo);
@@ -110,7 +139,8 @@ describe("Todo Routes", () => {
 
     const res = await request(app)
       .patch("/api/todos/999")
-      .send({ isCompleted: true });
+      .send({ isCompleted: true })
+      .set("Authorization", `Bearer ${testToken}`);
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: "Todo not found" });
@@ -120,7 +150,9 @@ describe("Todo Routes", () => {
   });
 
   test("PATCH /api/todos/ without id should return 404", async () => {
-    const res = await request(app).patch("/api/todos/");
+    const res = await request(app)
+      .patch("/api/todos/")
+      .set("Authorization", `Bearer ${testToken}`);
 
     expect(res.status).toBe(404);
   });
@@ -130,7 +162,9 @@ describe("Todo Routes", () => {
 
     mockedTodoService.deleteTodo.mockResolvedValue(deletedTodo as ITodo);
 
-    const res = await request(app).delete(`/api/todos/${deletedTodo._id}`);
+    const res = await request(app)
+      .delete(`/api/todos/${deletedTodo._id}`)
+      .set("Authorization", `Bearer ${testToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("message");
@@ -140,7 +174,9 @@ describe("Todo Routes", () => {
   test("DELETE /api/todos/:id should return 404 if todo not found", async () => {
     mockedTodoService.deleteTodo.mockResolvedValue(null);
 
-    const res = await request(app).delete("/api/todos/999");
+    const res = await request(app)
+      .delete("/api/todos/999")
+      .set("Authorization", `Bearer ${testToken}`);
 
     expect(res.status).toBe(404);
     expect(res.body).toHaveProperty("error");
@@ -148,7 +184,9 @@ describe("Todo Routes", () => {
   });
 
   test("DELETE /api/todos/ without id should return 404", async () => {
-    const res = await request(app).delete("/api/todos/");
+    const res = await request(app)
+      .delete("/api/todos/")
+      .set("Authorization", `Bearer ${testToken}`);
 
     expect(res.status).toBe(404);
   });
