@@ -4,6 +4,7 @@ import authRoutes from "../routes/auth.route";
 import * as authService from "../services/auth.service";
 import { Gender } from "../enums/gender.enum";
 import { createMockUser } from "../helpers/helpers";
+import { IUser } from "../models/user.model";
 
 // Mock the service
 jest.mock("../services/auth.service", () => ({
@@ -36,11 +37,9 @@ describe("Auth testing", () => {
   const mockUser = createMockUser();
 
   test("should signup a new user", async () => {
-    mockedAuthService.createUser.mockResolvedValue(mockUser as any);
-    mockedAuthService.authenticate.mockResolvedValue({
-      user: mockUser as any,
-      token,
-    });
+    mockedAuthService.createUser.mockResolvedValue(
+      (mockUser as unknown) as IUser
+    );
 
     const res = await request(app)
       .post("/api/auth/signup")
@@ -51,12 +50,7 @@ describe("Auth testing", () => {
       _id: mockUser._id,
       ...userData,
     });
-    expect(res.body.token).toBe(token);
     expect(mockedAuthService.createUser).toHaveBeenCalledTimes(1);
-    expect(mockedAuthService.authenticate).toHaveBeenCalledWith({
-      email: userData.email,
-      password: userData.password,
-    });
   });
 
   test("should return 400 if no data is sent", async () => {
@@ -129,7 +123,7 @@ describe("Auth testing", () => {
 
   test("should login successfully with valid credentials", async () => {
     mockedAuthService.authenticate.mockResolvedValue({
-      user: mockUser as any,
+      user: (mockUser as unknown) as IUser,
       token,
     });
 

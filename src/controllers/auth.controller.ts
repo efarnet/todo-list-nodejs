@@ -17,9 +17,7 @@ export const signup = async (
       gender,
     });
 
-    const { token } = await authService.authenticate({ email, password });
-
-    return res.status(201).json({ user: user.toJSON(), token });
+    return res.status(201).json({ user: user.toJSON() });
   } catch (err) {
     if (err instanceof Error) {
       if (err.message.includes("Email already in use")) {
