@@ -5,8 +5,12 @@ import {
   createTodoSchema,
   updateTodoSchema,
 } from "../validators/todo.validator";
+import { authMiddleware } from "../middlewares/auth.middleware";
 
 const router = Router();
+
+// Apply authentication middleware to all routes in this router
+router.use(authMiddleware);
 
 router.get("/", todoController.findAll);
 router.get("/:id", todoController.findTodoById);

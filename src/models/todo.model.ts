@@ -5,9 +5,12 @@ export interface ITodo extends Document {
   isCompleted?: boolean;
 }
 
-const TodoSchema = new Schema<ITodo>({
-  title: { type: String, required: true },
-  isCompleted: { type: Boolean, default: false },
-});
+const TodoSchema = new Schema<ITodo>(
+  {
+    title: { type: String, required: true },
+    isCompleted: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
 
 export default model<ITodo>("Todos", TodoSchema);
