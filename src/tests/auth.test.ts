@@ -5,11 +5,19 @@ import * as authService from "../services/auth.service";
 import { Gender } from "../enums/gender.enum";
 import { createMockUser, getCookies } from "../helpers/helpers";
 import { IUser } from "../models/user.model";
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
+import { mock } from "node:test";
+
+dotenv.config({ path: ".env.test" });
+
+const secret = process.env.JWT_SECRET || "test-secret";
 
 // Mock the service
 jest.mock("../services/auth.service", () => ({
   createUser: jest.fn(),
   authenticate: jest.fn(),
+  getUserById: jest.fn(),
 }));
 
 const mockedAuthService = authService as jest.Mocked<typeof authService>;
@@ -151,6 +159,48 @@ describe("Auth testing", () => {
     expect(mockedAuthService.authenticate).toHaveBeenCalledWith({
       email: userData.email,
       password: userData.password,
+    });
+  });
+
+  test("should return 401 if no token is provided", async () => {
+    const res = await request(app)
+      .get("/api/auth/me")
+      .expect(401);
+    expect(res.body).toHaveProperty("message", "No token provided");
+  });
+
+  test("should return 401 if token is invalid", async () => {
+    const res = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", "Bearer invalid-token")
+      .expect(401);
+    expect(res.body).toHaveProperty("message", "Invalid token");
+  });
+
+  test("should return user info if token is valid", async () => {
+    const validToken = jwt.sign(
+      { sub: mockUser._id, email: mockUser.email },
+      secret,
+      { expiresIn: "1h" }
+    );
+
+    mockedAuthService.getUserById.mockResolvedValue(
+      (mockUser as unknown) as IUser
+    );
+
+    const res = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${validToken}`)
+      .expect(200);
+
+    expect(mockedAuthService.getUserById).toHaveBeenCalledWith(mockUser._id);
+
+    expect(res.body).toEqual({
+      id: mockUser._id,
+      firstname: mockUser.firstname,
+      lastname: mockUser.lastname,
+      email: mockUser.email,
+      gender: mockUser.gender,
     });
   });
 });
