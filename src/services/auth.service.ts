@@ -49,9 +49,9 @@ export const authenticate = async (
     throw new Error("JWT_SECRET is not defined");
   }
 
-  const options: SignOptions = { expiresIn: secret as `${number}h` || "1h" };
+  const options: SignOptions = { expiresIn: process.env.JWT_EXPIRES_IN as `${number}h` || "1h" };
 
-  const token = jwt.sign(payload, process.env.JWT_SECRET as jwt.Secret, options);
+  const token = jwt.sign(payload, secret as jwt.Secret, options);
 
   return { user, token };
 };

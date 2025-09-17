@@ -1,4 +1,5 @@
 import { Gender } from "../enums/gender.enum";
+import { Response } from "supertest";
 
 export const delay = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
@@ -18,3 +19,12 @@ export const createMockUser = () => ({
     return rest;
   }),
 });
+
+export function getCookies(res: Response): string[] {
+  const rawCookies = res.headers["set-cookie"];
+  return Array.isArray(rawCookies)
+    ? rawCookies
+    : rawCookies
+    ? [rawCookies]
+    : [];
+}

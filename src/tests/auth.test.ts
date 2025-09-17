@@ -3,7 +3,7 @@ import express from "express";
 import authRoutes from "../routes/auth.route";
 import * as authService from "../services/auth.service";
 import { Gender } from "../enums/gender.enum";
-import { createMockUser } from "../helpers/helpers";
+import { createMockUser, getCookies } from "../helpers/helpers";
 import { IUser } from "../models/user.model";
 
 // Mock the service
@@ -135,6 +135,11 @@ describe("Auth testing", () => {
       })
       .expect(200);
 
+    const cookies = getCookies(res);
+
+    expect(cookies.length).toBeGreaterThan(0);
+    expect(cookies.some((c) => c.startsWith("token="))).toBe(true);
+
     expect(res.body.user).toMatchObject({
       _id: mockUser._id,
       firstname: mockUser.firstname,
@@ -142,7 +147,6 @@ describe("Auth testing", () => {
       email: mockUser.email,
       gender: mockUser.gender,
     });
-    expect(res.body.token).toBe(token);
     expect(mockedAuthService.authenticate).toHaveBeenCalledTimes(1);
     expect(mockedAuthService.authenticate).toHaveBeenCalledWith({
       email: userData.email,

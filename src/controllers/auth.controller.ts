@@ -39,7 +39,14 @@ export const login = async (
 
     const { user, token } = await authService.authenticate({ email, password });
 
-    return res.json({ user: user.toJSON(), token });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 1000 * 60 * 60, // 1h
+    });
+
+    return res.json({ user: user.toJSON() });
   } catch (err) {
     if (err instanceof Error) {
       if (err.message === "Invalid credentials") {
