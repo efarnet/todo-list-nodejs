@@ -30,6 +30,12 @@ export const createUser = async (data: SignupInput): Promise<IUser> => {
   return user;
 };
 
+export const getUserById = async (id: string): Promise<IUser | null> => {
+  const user = await User.findById(id);
+
+  return user;
+};
+
 export const authenticate = async (
   data: LoginInput
 ): Promise<{ user: IUser; token: string }> => {
