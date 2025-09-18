@@ -202,4 +202,22 @@ describe("Auth testing", () => {
       gender: mockUser.gender,
     });
   });
+
+  test("should logout successfully and clear the token cookie", async () => {
+    const res = await request(app)
+      .post("/api/auth/logout")
+      .expect(200);
+
+    expect(res.body).toHaveProperty("message", "Logged out successfully");
+
+    const setCookieHeader = res.headers["set-cookie"];
+
+    expect(setCookieHeader).toBeDefined();
+
+    const cookies = Array.isArray(setCookieHeader)
+      ? setCookieHeader
+      : [setCookieHeader];
+
+    expect(cookies.some((c: string) => c.startsWith("token=;"))).toBe(true);
+  });
 });
