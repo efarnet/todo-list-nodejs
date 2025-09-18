@@ -65,28 +65,15 @@ export const login = async (
 };
 
 export const getMe = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const userId = req.userId;
-
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const user = await authService.getUserById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    return res.json({
-      id: user._id,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      email: user.email,
-      gender: user.gender,
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Server error" });
+  if (!req.userId) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
+
+  const user = await authService.getUserById(req.userId);
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  res.json({ user });
 };

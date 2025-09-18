@@ -4,6 +4,7 @@ import connectDB from "./config/db";
 import todoRoutes from "./routes/todo.route";
 import authRoutes from "./routes/auth.route";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -21,7 +22,9 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
+// Routes
 app.use("/api/todos", todoRoutes);
 app.use("/api/auth", authRoutes);
 
