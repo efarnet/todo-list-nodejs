@@ -75,5 +75,11 @@ export const getMe = async (req: AuthenticatedRequest, res: Response) => {
     return res.status(404).json({ message: "User not found" });
   }
 
-  res.json({ user });
+  res.json({
+    id: user._id,
+    firstname: user.firstname,
+    lastname: user.lastname,
+    email: user.email,
+    gender: user.gender,
+  });
 };

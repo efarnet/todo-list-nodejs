@@ -7,7 +7,6 @@ import { createMockUser, getCookies } from "../helpers/helpers";
 import { IUser } from "../models/user.model";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import { mock } from "node:test";
 
 dotenv.config({ path: ".env.test" });
 
@@ -24,6 +23,7 @@ const mockedAuthService = authService as jest.Mocked<typeof authService>;
 
 const app = express();
 
+app.use(require("cookie-parser")());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 
@@ -166,23 +166,22 @@ describe("Auth testing", () => {
     const res = await request(app)
       .get("/api/auth/me")
       .expect(401);
+
     expect(res.body).toHaveProperty("message", "No token provided");
   });
 
   test("should return 401 if token is invalid", async () => {
     const res = await request(app)
       .get("/api/auth/me")
-      .set("Authorization", "Bearer invalid-token")
+      .set("Cookie", ["token=invalid-token"])
       .expect(401);
     expect(res.body).toHaveProperty("message", "Invalid token");
   });
 
   test("should return user info if token is valid", async () => {
-    const validToken = jwt.sign(
-      { sub: mockUser._id, email: mockUser.email },
-      secret,
-      { expiresIn: "1h" }
-    );
+    const validToken = jwt.sign({ sub: mockUser._id }, secret, {
+      expiresIn: "1h",
+    });
 
     mockedAuthService.getUserById.mockResolvedValue(
       (mockUser as unknown) as IUser
@@ -190,7 +189,7 @@ describe("Auth testing", () => {
 
     const res = await request(app)
       .get("/api/auth/me")
-      .set("Authorization", `Bearer ${validToken}`)
+      .set("Cookie", [`token=${validToken}`])
       .expect(200);
 
     expect(mockedAuthService.getUserById).toHaveBeenCalledWith(mockUser._id);
